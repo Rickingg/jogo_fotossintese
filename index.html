@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 Jogos da Fotossíntese</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: linear-gradient(135deg, #87CEEB, #98FB98);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 20px 0;
+        }
+        .screen {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .screen.active {
+            display: flex;
+        }
+        .title {
+            font-size: 3em;
+            color: #2E7D32;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        .subtitle {
+            font-size: 1.2em;
+            color: #1B5E20;
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            min-width: 200px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #66BB6A, #9CCC65);
+        }
+        .game-btn {
+            background: linear-gradient(45deg, #FF9800, #FFC107);
+            margin: 8px;
+            padding: 12px 20px;
+            font-size: 1em;
+        }
+        .game-btn:hover {
+            background: linear-gradient(45deg, #FFB74D, #FFD54F);
+        }
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            font-size: 0.9em;
+            color: #2E7D32;
+            font-style: italic;
+        }
+        .plant {
+            font-size: 4em;
+            animation: grow 3s ease-in-out;
+        }
+        @keyframes grow {
+            0% { transform: scale(0.3); opacity: 0.3; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .intro-animation {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .draggable {
+            position: absolute;
+            cursor: move;
+            font-size: 2em;
+            z-index: 10;
+            transition: all 0.3s;
+            user-select: none;
+        }
+        .draggable:hover {
+            transform: scale(1.1);
+        }
+        .drop-zone {
+            width: 150px;
+            height: 150px;
+            border: 3px dashed #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            margin: 20px;
+            transition: all 0.3s;
+        }
+        .drop-zone.hover {
+            background: rgba(76, 175, 80, 0.2);
+            transform: scale(1.05);
+        }
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 70%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .quiz-container {
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        .question {
+            font-size: 1.3em;
+            color: #2E7D32;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .option {
+            background: #E8F5E8;
+            border: 2px solid #4CAF50;
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option:hover {
+            background: #C8E6C9;
+            transform: translateX(5px);
+        }
+        .correct {
+            background: #4CAF50 !important;
+            color: white;
+            animation: pulse 0.5s;
+        }
+        .wrong {
+            background: #F44336 !important;
+            color: white;
+            animation: shake 0.5s;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .score {
+            font-size: 1.5em;
+            color: #2E7D32;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .equation {
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            color: #2E7D32;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .success-animation {
+            animation: celebration 1s ease-in-out;
+        }
+        @keyframes celebration {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(5deg); }
+            50% { transform: scale(1.2) rotate(-5deg); }
+            75% { transform: scale(1.1) rotate(3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .music-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #FF9800;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+        .element-correct {
+            animation: elementSuccess 0.8s ease-out;
+        }
+        @keyframes elementSuccess {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); background: #4CAF50; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .float {
+            position: absolute;
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .credits {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            line-height: 1.6;
+        }
+        .loading-bar {
+            width: 300px;
+            height: 20px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .loading-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 3s ease-in-out;
+        }
+        #orderGame {
+            justify-content: flex-start;
+            padding-top: 50px;
+        }
+        .order-container {
+            max-width: 600px;
+            width: 100%;
+        }
+            .title { font-size: 2em; }
+            .btn { padding: 12px 20px; font-size: 1em; min-width: 150px; }
+            .draggable { font-size: 1.5em; }
+            .drop-zone { width: 100px; height: 100px; font-size: 2.5em; }
+            .quiz-container { padding: 20px; margin: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()">🔈</button>
+
+    <div class="container">
+        <div class="floating-elements">
+            <div class="float" style="left: 10%; animation-delay: 0s;">🍃</div>
+            <div class="float" style="left: 20%; animation-delay: 1s;">🌿</div>
+            <div class="float" style="left: 80%; animation-delay: 2s;">🌱</div>
+            <div class="float" style="left: 90%; animation-delay: 3s;">🍃</div>
+        </div>
+
+        <div class="screen active" id="introScreen">
+            <div class="intro-animation">
+                <div class="plant" id="introPlant">🌱</div>
+                <div class="loading-bar">
+                    <div class="loading-fill" id="loadingFill"></div>
+                </div>
+                <p style="color: #2E7D32; font-size: 1.1em; margin-top: 10px;">Carregando...</p>
+            </div>
+        </div>
+
+        <div class="screen" id="menuScreen">
+            <div class="title">🌿 JOGOS DA FOTOSSÍNTESE</div>
+            <div class="subtitle">Aprenda brincando sobre como as plantas produzem seu próprio alimento!</div>
+            <button class="btn" onclick="showGameSelection()">🎮 Jogar</button>
+            <button class="btn" onclick="showCredits()">ℹ️ Créditos</button>
+            <div class="footer">Criado por Henrique, Rayner, Richard e Gabriel Vinícius – 2025</div>
+        </div>
+
+        <div class="screen" id="creditsScreen">
+            <div class="credits">
+                <h2 style="color: #2E7D32; margin-bottom: 20px;">📋 Créditos</h2>
+                <p><strong>Jogo criado para fins educativos.</strong></p>
+                <p><strong>Desenvolvido pelo grupo:</strong><br>Henrique, Rayner, Richard e Gabriel Vinícius</p>
+                <p><strong>Objetivo:</strong> Ensinar a fotossíntese de forma simples, lúdica e divertida!</p>
+                <p style="margin-top: 20px;">Obrigado por jogar! 🌱</p>
+            </div>
+            <button class="btn" onclick="showMenu()">🏠 Voltar ao Menu</button>
+        </div>
+
+        <div class="screen" id="gameSelectionScreen">
+            <div class="title">Escolha seu Jogo!</div>
+            <button class="game-btn" onclick="startGame('assembly')">🧩 Monte a Fotossíntese</button>
+            <button class="game-btn" onclick="startGame('quiz')">🧠 Quiz Verde</button>
+            <button class="game-btn" onclick="startGame('order')">📦 Ordem Certa</button>
+            <button class="btn" onclick="showMenu()">🏠 Voltar ao Menu</button>
+        </div>
+
+        <div class="screen" id="assemblyGame">
+            <div class="title" style="font-size: 1.8em;">🧩 Monte a Fotossíntese</div>
+            <p style="color: #2E7D32; margin-bottom: 20px;">Arraste os elementos corretos para a planta!</p>
+            <div class="game-area">
+                <div class="drop-zone" id="plantZone">🌱</div>
+            </div>
+            <div id="assemblyElements"></div>
+            <div id="assemblyResult"></div>
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="restartAssembly()">🔁 Jogar Novamente</button>
+                <button class="btn" onclick="showGameSelection()">🏠 Menu</button>
+            </div>
+        </div>
+
+        <div class="screen" id="quizGame">
+            <div class="quiz-container">
+                <div class="title" style="font-size: 1.8em;">🧠 Quiz Verde</div>
+                <div id="quizContent">
+                    <div class="question" id="questionText"></div>
+                    <div id="optionsContainer"></div>
+                </div>
+                <div class="score" id="quizScore">Pontuação: 0/8</div>
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="restartQuiz()" style="display: none;" id="restartQuizBtn">🔁 Jogar Novamente</button>
+                <button class="btn" onclick="showGameSelection()">🏠 Menu</button>
+            </div>
+        </div>
+
+        <div class="screen" id="orderGame">
+            <div class="order-container">
+                <div class="title" style="font-size: 1.8em;">📦 Ordem Certa</div>
+                <p style="color: #2E7D32; margin-bottom: 20px;">Arraste as etapas na ordem correta!</p>
+                <div id="orderSteps"></div>
+                <div id="orderResult"></div>
+                <div style="margin-top: 20px;">
+                    <button class="btn" onclick="restartOrder()">🔁 Jogar Novamente</button>
+                    <button class="btn" onclick="showGameSelection()">🏠 Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let musicEnabled = true;
+        let currentQuestionIndex = 0;
+        let quizScore = 0;
+        let assemblyCompleted = false;
+        let orderCompleted = false;
+        let gameStartTime = 0;
+
+        const quizQuestions = [
+            {
+                question: "Onde ocorre principalmente a fotossíntese?",
+                options: ["Nas raízes", "nas folhas", "No caule", "Nas flores"],
+                correct: 1
+            },
+            {
+                question: "O que a planta libera durante a fotossíntese?",
+                options: ["Gás carbônico", "Oxigênio", "Nitrogênio", "Vapor d'água"],
+                correct: 1
+            },
+            {
+                question: "Qual parte da planta absorve água?",
+                options: ["Folhas", "Flores", "Raízes", "Caule"],
+                correct: 2
+            },
+            {
+                question: "O que é necessário para a fotossíntese acontecer?",
+                options: ["Luz solar, água e CO₂", "Apenas água", "Apenas luz", "Apenas CO₂"],
+                correct: 0
+            },
+            {
+                question: "Qual pigmento é responsável pela cor verde das plantas?",
+                options: ["Hemoglobina", "Clorofila", "Melanina", "Caroteno"],
+                correct: 1
+            },
+            {
+                question: "O que as plantas produzem como alimento?",
+                options: ["Proteínas", "Gorduras", "Glicose", "Vitaminas"],
+                correct: 2
+            },
+            {
+                question: "Em que parte da célula vegetal ocorre a fotossíntese?",
+                options: ["Núcleo", "Mitocôndria", "Cloroplastos", "Ribossomos"],
+                correct: 2
+            },
+            {
+                question: "Por que a fotossíntese é importante para os animais?",
+                options: ["Produz água", "Produz oxigênio", "Produz calor", "Produz luz"],
+                correct: 1
+            }
+        ];
+
+        const orderSteps = [
+            "🌿 Raiz absorve água",
+            "🌫️ Entrada de gás carbônico",
+            "☀️ Luz solar atinge a folha",
+            "⚡ Clorofila ativa reação química",
+            "🍯 Produção de glicose e oxigênio"
+        ];
+
+        function toggleMusic() {
+            musicEnabled = !musicEnabled;
+            document.getElementById('musicBtn').textContent = musicEnabled ? '🔈' : '🔇';
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showMenu() {
+            showScreen('menuScreen');
+        }
+
+        function showCredits() {
+            showScreen('creditsScreen');
+        }
+
+        function showGameSelection() {
+            showScreen('gameSelectionScreen');
+        }
+
+        function startGame(gameType) {
+            gameStartTime = Date.now();
+            if (gameType === 'assembly') {
+                showScreen('assemblyGame');
+                initAssemblyGame();
+            } else if (gameType === 'quiz') {
+                showScreen('quizGame');
+                initQuizGame();
+            } else if (gameType === 'order') {
+                showScreen('orderGame');
+                initOrderGame();
+            }
+        }
+
+        function initAssemblyGame() {
+            assemblyCompleted = false;
+            const elements = ['💧', '🌫️', '☀️', '🗑️', '💨', '⚡'];
+            const container = document.getElementById('assemblyElements');
+            const result = document.getElementById('assemblyResult');
+            
+            container.innerHTML = '';
+            result.innerHTML = '';
+            
+            elements.forEach(element => {
+                const div = document.createElement('div');
+                div.className = 'draggable';
+                div.textContent = element;
+                div.draggable = true;
+                div.style.left = Math.random() * 70 + '%';
+                div.style.top = Math.random() * 60 + 20 + '%';
+                
+                div.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', element);
+                });
+                
+                container.appendChild(div);
+            });
+            
+            const dropZone = document.getElementById('plantZone');
+            let correctCount = 0;
+            const correctElements = ['💧', '🌫️', '☀️'];
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('hover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('hover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const element = e.dataTransfer.getData('text/plain');
+                dropZone.classList.remove('hover');
+                
+                if (correctElements.includes(element)) {
+                    correctCount++;
+                    const draggedElement = [...container.children].find(el => el.textContent === element);
+                    if (draggedElement) {
+                        draggedElement.classList.add('element-correct');
+                        setTimeout(() => draggedElement.remove(), 800);
+                    }
+                    
+                    if (correctCount === 3) {
+                        assemblyCompleted = true;
+                        const gameTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+                        dropZone.innerHTML = '🌳';
+                        dropZone.classList.add('success-animation');
+                        result.innerHTML = `
+                            <div class="equation">
+                                <strong>Parabéns! 🎉</strong><br>
+                                Você completou o jogo em <strong>${gameTime} segundos!</strong><br><br>
+                                Equação da Fotossíntese:<br>
+                                <strong>6CO₂ + 6H₂O + luz → C₆H₁₂O₆ + 6O₂</strong>
+                            </div>
+                            <p style="color: #2E7D32; margin-top: 15px;">
+                                <strong>Você sabia?</strong> Sem fotossíntese, não existiria oxigênio no planeta!
+                            </p>
+                        `;
+                    }
+                } else {
+                    dropZone.style.background = 'rgba(244, 67, 54, 0.3)';
+                    setTimeout(() => {
+                        dropZone.style.background = '';
+                    }, 500);
+                }
+            });
+        }
+
+        function restartAssembly() {
+            const dropZone = document.getElementById('plantZone');
+            dropZone.innerHTML = '🌱';
+            dropZone.classList.remove('success-animation');
+            dropZone.style.background = '';
+            initAssemblyGame();
+        }
+
+        function initQuizGame() {
+            currentQuestionIndex = 0;
+            quizScore = 0;
+            document.getElementById('restartQuizBtn').style.display = 'none';
+            showNextQuestion();
+        }
+
+        function showNextQuestion() {
+            if (currentQuestionIndex >= quizQuestions.length) {
+                showQuizResults();
+                return;
+            }
+            
+            const question = quizQuestions[currentQuestionIndex];
+            document.getElementById('questionText').textContent = question.question;
+            document.getElementById('quizScore').textContent = `Pontuação: ${quizScore}/${quizQuestions.length}`;
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.textContent = option;
+                div.addEventListener('click', () => selectAnswer(index));
+                container.appendChild(div);
+            });
+        }
+
+        function selectAnswer(selectedIndex) {
+            const question = quizQuestions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && index !== question.correct) {
+                    option.classList.add('wrong');
+                }
+                option.style.pointerEvents = 'none';
+            });
+            
+            if (selectedIndex === question.correct) {
+                quizScore++;
+            }
+            
+            setTimeout(() => {
+                currentQuestionIndex++;
+                showNextQuestion();
+            }, 2000);
+        }
+
+        function showQuizResults() {
+            const percentage = (quizScore / quizQuestions.length * 100).toFixed(0);
+            const gameTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+            let message = '';
+            
+            if (percentage >= 80) {
+                message = 'Excelente! 🌟 Você é um expert em fotossíntese!';
+            } else if (percentage >= 60) {
+                message = 'Muito bom! 🌿 Continue estudando!';
+            } else {
+                message = 'Que tal tentar novamente? 🌱 A prática leva à perfeição!';
+            }
+            
+            document.getElementById('questionText').innerHTML = `
+                <div style="text-align: center;">
+                    <h3>Resultado Final!</h3>
+                    <div class="score" style="font-size: 2em; color: #4CAF50;">
+                        ${quizScore}/${quizQuestions.length} (${percentage}%)
+                    </div>
+                    <p><strong>Você completou o quiz em ${gameTime} segundos!</strong></p>
+                    <p>${message}</p>
+                    <div class="equation" style="margin-top: 20px;">
+                        <strong>Curiosidade:</strong><br>
+                        As plantas produzem aproximadamente 330 bilhões de toneladas de oxigênio por ano! 🌍
+                    </div>
+                </div>
+            `;
+            document.getElementById('optionsContainer').innerHTML = '';
+            document.getElementById('restartQuizBtn').style.display = 'inline-block';
+        }
+
+        function restartQuiz() {
+            initQuizGame();
+        }
+
+        function initOrderGame() {
+            orderCompleted = false;
+            const container = document.getElementById('orderSteps');
+            const result = document.getElementById('orderResult');
+            
+            container.innerHTML = '<div style="color: #2E7D32; margin-bottom: 20px;"><strong>Arraste para ordenar:</strong></div>';
+            result.innerHTML = '';
+            
+            const shuffled = [...orderSteps].sort(() => Math.random() - 0.5);
+            let userOrder = [];
+            
+            shuffled.forEach((step, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.textContent = step;
+                div.draggable = true;
+                div.style.cursor = 'move';
+                div.style.margin = '5px 0';
+                
+                div.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', step);
+                    div.style.opacity = '0.5';
+                });
+                
+                div.addEventListener('dragend', () => {
+                    div.style.opacity = '1';
+                });
+                
+                div.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+                
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const draggedStep = e.dataTransfer.getData('text/plain');
+                    const draggedElement = [...container.children].find(el => el.textContent === draggedStep);
+                    const targetElement = e.target;
+                    
+                    if (draggedElement && targetElement && draggedElement !== targetElement) {
+                        const temp = targetElement.textContent;
+                        targetElement.textContent = draggedElement.textContent;
+                        draggedElement.textContent = temp;
+                        checkOrder();
+                    }
+                });
+                
+                container.appendChild(div);
+            });
+            
+            const checkButton = document.createElement('button');
+            checkButton.className = 'btn';
+            checkButton.textContent = '✅ Verificar Ordem';
+            checkButton.onclick = checkOrder;
+            container.appendChild(checkButton);
+            
+            const giveUpButton = document.createElement('button');
+            giveUpButton.className = 'btn';
+            giveUpButton.style.background = 'linear-gradient(45deg, #FF5722, #FF7043)';
+            giveUpButton.textContent = '🏳️ Desistir e Ver Resposta';
+            giveUpButton.onclick = showCorrectOrder;
+            container.appendChild(giveUpButton);
+            
+            function showCorrectOrder() {
+                const gameTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+                result.innerHTML = `
+                    <div class="equation" style="background: #FFF3E0; border: 2px solid #FF9800;">
+                        <strong>Ordem Correta:</strong><br><br>
+                        ${orderSteps.map((step, index) => `${index + 1}. ${step}`).join('<br>')}
+                    </div>
+                    <p style="color: #FF5722; margin-top: 15px; font-weight: bold;">
+                        Não desista! Tente novamente para aprender melhor! 💪<br>
+                        Tempo gasto: ${gameTime} segundos
+                    </p>
+                `;
+                checkButton.style.display = 'none';
+                giveUpButton.style.display = 'none';
+                container.querySelectorAll('.option').forEach(el => {
+                    if (el.textContent && !el.textContent.includes('Verificar') && !el.textContent.includes('Arraste') && !el.textContent.includes('Desistir')) {
+                        el.draggable = false;
+                        el.style.opacity = '0.6';
+                    }
+                });
+            }
+            
+            function checkOrder() {
+                const currentOrder = [...container.children]
+                    .filter(el => el.textContent && !el.textContent.includes('Verificar') && !el.textContent.includes('Arraste') && !el.textContent.includes('Desistir'))
+                    .map(el => el.textContent);
+                
+                let correct = true;
+                currentOrder.forEach((step, index) => {
+                    if (step !== orderSteps[index]) {
+                        correct = false;
+                    }
+                });
+                
+                if (correct && currentOrder.length === orderSteps.length) {
+                    orderCompleted = true;
+                    const gameTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+                    result.innerHTML = `
+                        <div class="equation success-animation">
+                            <strong>🎉 PARABÉNS! VOCÊ ACERTOU! 🎉</strong><br><br>
+                            <strong>Perfeito!</strong><br>
+                            Você completou o jogo em <strong>${gameTime} segundos!</strong><br><br>
+                            Você ordenou corretamente o processo da fotossíntese!
+                        </div>
+                        <p style="color: #2E7D32; margin-top: 15px;">
+                            <strong>Curiosidade:</strong> Esse processo acontece milhões de vezes por segundo nas folhas! ⚡
+                        </p>
+                    `;
+                    container.querySelectorAll('.option').forEach(el => {
+                        if (el.textContent && !el.textContent.includes('Verificar') && !el.textContent.includes('Arraste') && !el.textContent.includes('Desistir')) {
+                            el.classList.add('correct');
+                            el.draggable = false;
+                        }
+                    });
+                    checkButton.style.display = 'none';
+                    giveUpButton.style.display = 'none';
+                } else {
+                    result.innerHTML = '<p style="color: #F44336; font-size: 1.2em; font-weight: bold;">❌ Ordem incorreta! Tente novamente. 🌱</p>';
+                }
+            }
+        }
+
+        function restartOrder() {
+            initOrderGame();
+        }
+
+        setTimeout(() => {
+            document.getElementById('loadingFill').style.width = '100%';
+            document.getElementById('introPlant').textContent = '🌳';
+            
+            setTimeout(() => {
+                showScreen('menuScreen');
+            }, 3500);
+        }, 500);
+    </script>
+</body>
+</html>
